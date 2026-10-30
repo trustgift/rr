@@ -4,12 +4,12 @@ import os
 import sys
 
 from aiogram import Bot, Dispatcher, types
+from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from dotenv import load_dotenv
 
 # --- 1. ЗАГРУЗКА ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ---
-# Подтягивает .env при локальном запуске; на хостинге подхватит системные переменные
 load_dotenv()
 
 BOT_TOKEN: str = os.getenv("BOT_TOKEN", "").strip()
@@ -31,7 +31,7 @@ dp = Dispatcher()
 @dp.message(CommandStart())
 async def handle_start(message: types.Message):
     await message.answer(
-        f"Привет, {message.from_user.first_name}! Бот запущен и готов к работе."
+        f"Привет, <b>{message.from_user.first_name}</b>! Бот запущен и готов к работе."
     )
 
 
@@ -40,7 +40,7 @@ async def handle_admin(message: types.Message):
     if message.from_user.id != ADMIN_ID:
         await message.answer("У вас нет доступа к этой команде.")
         return
-    await message.answer("Панель администратора активна.")
+    await message.answer("<b>Панель администратора</b> активна.")
 
 
 @dp.message()
@@ -55,9 +55,15 @@ async def main():
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     )
 
-    bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+    # Инициализация с использованием DefaultBotProperties
+    bot = Bot(
+        token=BOT_TOKEN,
+        default=DefaultBotProperties(
+            parse_mode=ParseMode.HTML,
+            link_preview_is_disabled=False,  # аналог старого disable_web_page_preview
+        ),
+    )
 
-    # Пропуск накопившихся апдейтов при перезапуске бота
     await bot.delete_webhook(drop_pending_updates=True)
 
     logging.info("Бот успешно запущен.")
@@ -69,4 +75,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-  
